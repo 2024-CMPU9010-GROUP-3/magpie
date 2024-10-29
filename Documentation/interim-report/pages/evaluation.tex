@@ -1,0 +1,49 @@
+\subsection{Definition of Success}
+Our project defines success by how effective it is in addressing the identified
+challenges faced by Urban Planners.
+
+\noindent{}To gauge if \textit{Magpie} solves the problems outlined in chapter 1
+and 2, the following points need to be evaluated:
+\vspace{-3mm}
+\begin{itemize}
+  \item{\textbf{Efficient Data Aggregation:} Does \textit{Magpie} offer the user
+  a comprehensive overview of multiple kinds of public amenities in a
+  geographical region they selected?}
+  \item{\textbf{Automatic Data Extraction:} Does \textit{Magpie} include a data
+  pipeline to extract and integrate new data automatically as it becomes
+  available?}
+  \item{\textbf{Accuracy of Public Amenities Identification:} Are at least 80\%
+  of public amenities in the dataset correctly identified and are at the most
+  10\% identified incorrectly?}
+  \item{\textbf{Straightforward Interface:} Does the user interface allow for
+  the retrieval of desired data efficiently (measured using Click Testing,
+  including metrics such as: Time Till First Click, Total Time on Task, Overall
+  Number of Clicks, and Ease of Finding/Clicking)?}
+  \item{\textbf{Accessibility:} Does \textit{Magpie} make a reasonable effort to
+  make its user interface accessible to users with special needs?}
+\end{itemize}
+
+% Adds page break to ensure blocking
+\pagebreak{}
+
+\subsection{Code Integrity}
+To guarantee the integrity of \textit{Magpie's} code, we have devised a test
+strategy using automated unit tests, integration tests and end-to-end tests.
+
+\noindent{}Unit testing allows us to do granular regression testing, alerting us
+to issues before they even enter the main codebase. Integration tests offer a
+surefire way to confirm that each module is compiling correctly and is ready to
+be released. End-to-end tests inspect the interaction of all components,
+ensuring compatibility between modules.
+
+\noindent{}For unit tests, we aim for 100\% code coverage where practical. In
+the future, we want to adopt a test-driven development workflow to prevent any
+code from going untested. In the case of breaking changes, we are discussing the
+use of A/B-testing or canary testing.
+
+\subsection{CI/CD}
+Using a continuous integration/continuous delivery pipeline is industry standard
+and allows for rapid iteration and shorter release cycles. Our automated testing
+strategy is run by the pipeline before every public release, ensuring code
+integrity. Automatic building and deployment allows us to offer users a stable
+software solution that is always up-to-date and regularly includes new features.

@@ -11,14 +11,13 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	geos "github.com/twpayne/go-geos"
+	go_geom "github.com/twpayne/go-geom"
 )
 
 type PointType string
 
 const (
-	PointTypePlaceholder1 PointType = "placeholder1"
-	PointTypePlaceholder2 PointType = "placeholder2"
+	PointTypeParking PointType = "parking"
 )
 
 func (e *PointType) Scan(src interface{}) error {
@@ -64,10 +63,10 @@ type Login struct {
 }
 
 type Point struct {
-	ID      int64      `json:"id"`
-	Longlat *geos.Geom `json:"longlat"`
-	Type    PointType  `json:"type"`
-	Details []byte     `json:"details"`
+	ID      int64          `json:"id"`
+	Longlat *go_geom.Point `json:"longlat"`
+	Type    PointType      `json:"type"`
+	Details []byte         `json:"details"`
 }
 
 type UserDetail struct {

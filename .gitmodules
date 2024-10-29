@@ -1,0 +1,3 @@
+[submodule "Python/yolo/magpie-yolov"]
+	path = Python/yolo/magpie-yolov
+	url = https://github.com/2024-CMPU9010-GROUP-3/magpie-yolov.git

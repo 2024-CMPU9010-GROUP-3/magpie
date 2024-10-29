@@ -1,13 +1,13 @@
 import LocationAggregatorMap from "../map/MapboxMap";
+import ProtectedRoute from "../ProtectedRoute";
 import CookieBanner from '@/app/components/banner/CookieBanner';
 
 
 const HomePage = () => {
   return (
-    <div>
-      <LocationAggregatorMap />
-      <CookieBanner />
-    </div>
+      <ProtectedRoute>
+        <LocationAggregatorMap />
+      </ProtectedRoute>
   );
 };
 

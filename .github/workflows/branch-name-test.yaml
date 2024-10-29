@@ -18,8 +18,8 @@ jobs:
       - name: Validate branch name
         run: |
           BRANCH_NAME="${{ steps.get_branch_name.outputs.branch }}"
-          if [[ ! "$BRANCH_NAME" =~ ^(backend/|frontend/|documentation/|python/|distribution/|misc/) ]]; then
-            echo "Branch name '$BRANCH_NAME' is not valid. Rename the branch to match the pattern 'backend/', 'frontend/', 'documentation/', 'distribution/', python/ or 'misc/'."
+          if [[ ! "$BRANCH_NAME" =~ ^(backend/|frontend/|documentation/|python/|distribution/|misc/|update/) ]]; then
+            echo "Branch name '$BRANCH_NAME' is not valid. Rename the branch to match the pattern 'backend/', 'frontend/', 'documentation/', 'distribution/', update/, python/ or 'misc/'."
             exit 1
           fi
         shell: bash

@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/2024-CMPU9010-GROUP-3/PROJECT/internal/handlers"
+	"github.com/2024-CMPU9010-GROUP-3/PROJECT/internal/middleware"
 )
 
 func init() {
@@ -24,8 +25,10 @@ func public() *http.ServeMux {
 func pointsPublic() *http.ServeMux {
 	router := http.NewServeMux()
 	pointsHandler := &handlers.PointsHandler{}
-	router.HandleFunc("GET /byRadius", pointsHandler.HandleGetByRadius)
-	router.HandleFunc("GET /pointDetails", pointsHandler.HandleGetPointDetails)
+
+	// Authenticated access
+	router.Handle("GET /inRadius", middleware.Access.Authenticated(http.HandlerFunc(pointsHandler.HandleGetByRadius)))
+	router.Handle("GET /{id}", middleware.Access.Authenticated(http.HandlerFunc(pointsHandler.HandleGetPointDetails)))
 
 	return router
 }
@@ -34,11 +37,14 @@ func auth() *http.ServeMux {
 	router := http.NewServeMux()
 	authHandler := &handlers.AuthHandler{}
 
-	router.HandleFunc("GET /User/{id}", authHandler.HandleGet)
-	router.HandleFunc("POST /User/", authHandler.HandlePost)
-	router.HandleFunc("PUT /User/{id}", authHandler.HandlePut)
-	router.HandleFunc("DELETE /User/{id}", authHandler.HandleDelete)
-	router.HandleFunc("POST /User/login", authHandler.HandleLogin)
+	// Public access
+	router.Handle("POST /User/login", middleware.Access.Public(http.HandlerFunc(authHandler.HandleLogin)))
+	router.Handle("POST /User/", middleware.Access.Public(http.HandlerFunc(authHandler.HandlePost)))
+
+	// Protected access
+	router.Handle("GET /User/{id}", middleware.Access.Protected(http.HandlerFunc(authHandler.HandleGet)))
+	router.Handle("PUT /User/{id}", middleware.Access.Protected(http.HandlerFunc(authHandler.HandlePut)))
+	router.Handle("DELETE /User/{id}", middleware.Access.Protected(http.HandlerFunc(authHandler.HandleDelete)))
 
 	return router
 }

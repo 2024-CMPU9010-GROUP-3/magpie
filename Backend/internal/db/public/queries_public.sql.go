@@ -10,8 +10,123 @@ package db
 import (
 	"context"
 
-	geos "github.com/twpayne/go-geos"
+	"github.com/jackc/pgx/v5/pgtype"
+	go_geom "github.com/twpayne/go-geom"
 )
+
+const createUser = `-- name: CreateUser :one
+INSERT INTO logins (
+  Username, Email, PasswordHash
+) VALUES (
+  $1, $2, $3
+) RETURNING Id
+`
+
+type CreateUserParams struct {
+	Username     string `json:"username"`
+	Email        string `json:"email"`
+	Passwordhash string `json:"passwordhash"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createUser, arg.Username, arg.Email, arg.Passwordhash)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const createUserDetails = `-- name: CreateUserDetails :one
+INSERT INTO user_details (
+  Id, FirstName, LastName, ProfilePicture
+) VALUES (
+  $1, $2, $3, $4
+) RETURNING Id
+`
+
+type CreateUserDetailsParams struct {
+	ID             pgtype.UUID `json:"id"`
+	Firstname      string      `json:"firstname"`
+	Lastname       string      `json:"lastname"`
+	Profilepicture pgtype.Text `json:"profilepicture"`
+}
+
+func (q *Queries) CreateUserDetails(ctx context.Context, arg CreateUserDetailsParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createUserDetails,
+		arg.ID,
+		arg.Firstname,
+		arg.Lastname,
+		arg.Profilepicture,
+	)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM logins WHERE Id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUser, id)
+	return err
+}
+
+const getLoginByEmail = `-- name: GetLoginByEmail :one
+SELECT Id, Username, Email, PasswordHash
+FROM logins
+WHERE Email = $1
+LIMIT 1
+`
+
+func (q *Queries) GetLoginByEmail(ctx context.Context, email string) (Login, error) {
+	row := q.db.QueryRow(ctx, getLoginByEmail, email)
+	var i Login
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.Passwordhash,
+	)
+	return i, err
+}
+
+const getLoginById = `-- name: GetLoginById :one
+SELECT Id, Username, Email, PasswordHash
+FROM logins
+WHERE Id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetLoginById(ctx context.Context, id pgtype.UUID) (Login, error) {
+	row := q.db.QueryRow(ctx, getLoginById, id)
+	var i Login
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.Passwordhash,
+	)
+	return i, err
+}
+
+const getLoginByUsername = `-- name: GetLoginByUsername :one
+SELECT Id, Username, Email, PasswordHash
+FROM logins
+WHERE Username = $1
+LIMIT 1
+`
+
+func (q *Queries) GetLoginByUsername(ctx context.Context, username string) (Login, error) {
+	row := q.db.QueryRow(ctx, getLoginByUsername, username)
+	var i Login
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.Passwordhash,
+	)
+	return i, err
+}
 
 const getPointDetails = `-- name: GetPointDetails :one
 SELECT Details::jsonb FROM points
@@ -38,9 +153,9 @@ type GetPointsInEnvelopeParams struct {
 }
 
 type GetPointsInEnvelopeRow struct {
-	ID      int64      `json:"id"`
-	Longlat *geos.Geom `json:"longlat"`
-	Type    PointType  `json:"type"`
+	ID      int64          `json:"id"`
+	Longlat *go_geom.Point `json:"longlat"`
+	Type    PointType      `json:"type"`
 }
 
 func (q *Queries) GetPointsInEnvelope(ctx context.Context, arg GetPointsInEnvelopeParams) ([]GetPointsInEnvelopeRow, error) {
@@ -66,4 +181,129 @@ func (q *Queries) GetPointsInEnvelope(ctx context.Context, arg GetPointsInEnvelo
 		return nil, err
 	}
 	return items, nil
+}
+
+const getPointsInRadius = `-- name: GetPointsInRadius :many
+SELECT Id, LongLat::geometry, Type from points
+WHERE ST_DWithin(
+  LongLat::geography,
+  ST_SetSRID(ST_MakePoint($1::float, $2::float), 4326)::geography,
+  $3::float
+)
+`
+
+type GetPointsInRadiusParams struct {
+	Longitude float64 `json:"longitude"`
+	Latitude  float64 `json:"latitude"`
+	Radius    float64 `json:"radius"`
+}
+
+type GetPointsInRadiusRow struct {
+	ID      int64          `json:"id"`
+	Longlat *go_geom.Point `json:"longlat"`
+	Type    PointType      `json:"type"`
+}
+
+func (q *Queries) GetPointsInRadius(ctx context.Context, arg GetPointsInRadiusParams) ([]GetPointsInRadiusRow, error) {
+	rows, err := q.db.Query(ctx, getPointsInRadius, arg.Longitude, arg.Latitude, arg.Radius)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPointsInRadiusRow
+	for rows.Next() {
+		var i GetPointsInRadiusRow
+		if err := rows.Scan(&i.ID, &i.Longlat, &i.Type); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserDetails = `-- name: GetUserDetails :one
+SELECT Id, RegisterDate, FirstName, LastName, ProfilePicture, LastLoggedIn
+FROM user_details
+WHERE Id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetUserDetails(ctx context.Context, id pgtype.UUID) (UserDetail, error) {
+	row := q.db.QueryRow(ctx, getUserDetails, id)
+	var i UserDetail
+	err := row.Scan(
+		&i.ID,
+		&i.Registerdate,
+		&i.Firstname,
+		&i.Lastname,
+		&i.Profilepicture,
+		&i.Lastloggedin,
+	)
+	return i, err
+}
+
+const updateLastLogin = `-- name: UpdateLastLogin :exec
+UPDATE user_details
+SET LastLoggedIn = (NOW() AT TIME ZONE 'utc')
+WHERE Id = $1
+`
+
+func (q *Queries) UpdateLastLogin(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, updateLastLogin, id)
+	return err
+}
+
+const updateLogin = `-- name: UpdateLogin :exec
+UPDATE logins
+SET 
+  Username = COALESCE($2, Username),
+  Email = COALESCE($3, Email),
+  PasswordHash = COALESCE(NULLIF($4::VARCHAR(72), ''), PasswordHash)
+WHERE Id = $1
+`
+
+type UpdateLoginParams struct {
+	ID           pgtype.UUID `json:"id"`
+	Username     string      `json:"username"`
+	Email        string      `json:"email"`
+	Passwordhash string      `json:"passwordhash"`
+}
+
+func (q *Queries) UpdateLogin(ctx context.Context, arg UpdateLoginParams) error {
+	_, err := q.db.Exec(ctx, updateLogin,
+		arg.ID,
+		arg.Username,
+		arg.Email,
+		arg.Passwordhash,
+	)
+	return err
+}
+
+const updateUserDetails = `-- name: UpdateUserDetails :exec
+UPDATE user_details
+SET
+  FirstName = COALESCE(NULLIF($2::VARCHAR(64), ''), FirstName),
+  LastName = COALESCE(NULLIF($3::VARCHAR(64), ''), LastName),
+  ProfilePicture = COALESCE(NULLIF($4::VARCHAR(512), ''), ProfilePicture)
+WHERE Id = $1
+`
+
+type UpdateUserDetailsParams struct {
+	ID             pgtype.UUID `json:"id"`
+	Firstname      string      `json:"firstname"`
+	Lastname       string      `json:"lastname"`
+	Profilepicture string      `json:"profilepicture"`
+}
+
+func (q *Queries) UpdateUserDetails(ctx context.Context, arg UpdateUserDetailsParams) error {
+	_, err := q.db.Exec(ctx, updateUserDetails,
+		arg.ID,
+		arg.Firstname,
+		arg.Lastname,
+		arg.Profilepicture,
+	)
+	return err
 }

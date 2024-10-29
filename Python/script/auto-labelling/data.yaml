@@ -1,0 +1,8 @@
+## tell the yolo model where to find my data
+
+train: C:\TUD_MSC\sem_3\Magpie_mc\dataset_ann\yolov8_n\images\train  #training imgs
+val: C:\TUD_MSC\sem_3\Magpie_mc\dataset_ann\yolov8_n\images\val      # val imgs
+
+# class name & numbers
+nc: 1 
+names: ['car']

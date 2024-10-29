@@ -13,10 +13,9 @@ sql:
       overrides:
         - db_type: "geometry"
           go_type: 
-            import: "github.com/twpayne/go-geos"
-            package: "geos"
+            import: "github.com/twpayne/go-geom"
             pointer: true
-            type: "Geom"
+            type: "Point"
 - schema: "sql/schema.sql"
   queries: "sql/queries_public.sql"
   engine: "postgresql"
@@ -30,7 +29,6 @@ sql:
       overrides:
         - db_type: "geometry"
           go_type: 
-            import: "github.com/twpayne/go-geos"
-            package: "geos"
+            import: "github.com/twpayne/go-geom"
             pointer: true
-            type: "Geom"
+            type: "Point"

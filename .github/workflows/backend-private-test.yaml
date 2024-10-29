@@ -10,11 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: "Install libgeos-dev package"
-        uses: ConorMacBride/install-package@v1
-        with:
-          apt: libgeos-dev
-
       - name: Checkout the repository
         uses: actions/checkout@v4
 
@@ -29,6 +24,151 @@ jobs:
           working-directory: Backend
           version: v1.60
           args: --build-tags private
+  
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+        
+      - name: Extract package version
+        id: get_version
+        run: |
+          VERSION=$(cat Backend/.version | tr -d '\n' | tr -d '\r')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Set up test result converter
+        run: go install github.com/ctrf-io/go-ctrf-json-reporter/cmd/go-ctrf-json-reporter@latest
+
+      - name: Run unit tests
+        working-directory: ./Backend
+        run: go test -tags=private -coverprofile=../TestCoverage-private.out -json ./... > ../TestResults-private.json
+
+      - name: Convert test results to CTRF
+        if: always()
+        run: cat TestResults-private.json | go-ctrf-json-reporter -appName "Magpie Private Backend" -appVersion ${{ env.VERSION }} -output TestResults-private.json
+
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults-private
+          path: TestResults-private.json
+
+      - name: Archive code coverage results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestCoverage-private
+          path: TestCoverage-private.out
+  
+  test-results-check:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: always()
+    permissions:
+      contents:      read
+      actions:       read
+      pull-requests: write
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: TestResults-private
+
+      - name: Download test coverage results
+        uses: actions/download-artifact@v4
+        with:
+          name: TestCoverage-private
+
+      - name: Check coverage
+        id: check_coverage
+        working-directory: ./Backend
+        run: |
+          coverage=$(go tool cover -func=../TestCoverage-private.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+          echo "total_coverage=$coverage" >> $GITHUB_OUTPUT
+          echo "Coverage: $coverage%"
+
+      - name: Post comment on the PR with test coverage
+        working-directory: ./Backend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          COVERAGE=${{ steps.check_coverage.outputs.total_coverage }}
+          COVERAGE_REPORT=$(go tool cover -func=../TestCoverage-private.out)
+          RUN_NUMBER=${{ github.run_number }}
+          INDICATOR="\U00002705"
+          if (( $(echo "$COVERAGE < 75" | bc -l) )); then
+            INDICATOR="\U0000274C"
+          fi
+
+          THRESHOLD=75.0
+
+          echo "<details>" > coverage_table.md
+          echo "<summary>Detailed Coverage Report</summary>" >> coverage_table.md
+          echo "" >> coverage_table.md # Blank line for proper markdown rendering
+          echo "| File | Function | Coverage | 🔎 |" >> coverage_table.md
+          echo "|------|----------|----------| - |" >> coverage_table.md
+
+          echo "$COVERAGE_REPORT" | while read -r line; do
+            if [[ $line == total:* ]]; then
+                FILE="total:"
+                FUNCTION="(statements)"
+              else
+                FILE=$(echo "$line" | awk -F':' '{print $1":"$2}')
+                FUNCTION=$(echo "$line" | awk '{print $(NF-1)}')
+              fi
+              
+            STATEMENT_COVERAGE=$(echo "$line" | awk '{print $NF}' | sed 's/%//')
+
+            if (( $(echo "$STATEMENT_COVERAGE >= $THRESHOLD" | bc -l) )); then
+              SYMBOL="✅"
+            elif (( $(echo "$STATEMENT_COVERAGE > 0" | bc -l) )); then
+              SYMBOL="⚠️"
+            else
+              SYMBOL="❌"
+            fi
+
+            STATEMENT_COVERAGE="\`$STATEMENT_COVERAGE%\`"
+            FILE="\`$FILE\`"
+            FUNCTION="\`$FUNCTION\`"
+
+            echo "| $FILE | $FUNCTION | $STATEMENT_COVERAGE | $SYMBOL |" >> coverage_table.md
+          done
+
+          echo "</details>" >> coverage_table.md
+
+          COMMENT_BODY=$(echo -e "### [[Run #$RUN_NUMBER]](https://github.com/2024-CMPU9010-GROUP-3/PROJECT/actions/runs/${{ github.run_id }}#summary) Test Coverage for \`private\`: $COVERAGE% $INDICATOR\n$(cat coverage_table.md)")
+          gh issue comment ${{ env.PR_NUMBER }} --body "$COMMENT_BODY"
+      
+      - name: Fail if coverage is below threshold
+        run: |
+          COVERAGE=${{ steps.check_coverage.outputs.total_coverage }}
+          if (( $(echo "$COVERAGE < 75" | bc -l) )); then
+            echo "Coverage ($COVERAGE%) is below the threshold (75%)"
+            exit 1
+          fi
+
+      - name: Report test results
+        run: npx github-actions-ctrf TestResults-private.json --pr-comment --title "Test Results (private)"
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-check:
     needs: lint-check

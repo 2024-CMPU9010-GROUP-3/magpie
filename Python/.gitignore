@@ -1,0 +1,50 @@
+# Binary and cache files
+**/lib
+**/lib64
+**/bin
+yolov8
+yolov8s
+yolov
+
+yolov8m.pt
+yolov8x.pt
+yolo11n.pt
+
+# Remove dataset elements
+*.bmp
+*.tif
+*.tiff
+*.heic
+*.BMP
+*.TIF
+*.TIFF
+*.HEIC
+*.mp4
+*.mov
+*.MOV
+*.avi
+*.data
+*.cfg
+!setup.cfg
+!cfg/yolov3*.cfg
+
+# Remove compiled files
+storage.googleapis.com
+runs/*
+data/*
+data/images/*
+!data/*.yaml
+!data/hyps
+!data/scripts
+!data/images
+!data/images/zidane.jpg
+!data/images/bus.jpg
+!data/*.sh
+
+# Remove results
+results*.csv
+runs/
+dataset_ann
+/yolo/magpie-yolov-v8/runs
+yolo11n.pt`
+yolov8_n

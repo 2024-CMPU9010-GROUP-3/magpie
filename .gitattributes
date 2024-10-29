@@ -1,1 +1,39 @@
-* text eol=crlf
+# Apply CRLF to Go files
+*.go text eol=crlf
+*.mod text eol=crlf
+*.sum text eol=crlf
+
+# Apply CRLF to SQL files
+*.sql text eol=crlf
+
+# Apply CRLF to LaTeX files
+*.tex text eol=crlf
+*.bib text eol=crlf
+
+# Apply CRLF to Python files
+*.py text eol=crlf
+
+# Apply CRLF to Markdown files
+*.md text eol=crlf
+
+# Apply CRLF to text files
+*.txt text eol=crlf
+
+# Apply CRLF to Yaml files
+*.yaml text eol=crlf
+*.yml text eol=crlf
+
+# Apply CRLF to configuration files
+*.conf text eol=crlf
+*.cfg text eol=crlf
+*.mjs text eol=crlf
+
+# Apply CRLF to TypeScript files
+*.ts text eol=crlf
+*.tsx text eol=crlf
+
+# Apply CRLF to JavaScript files
+*.js text eol=crlf
+
+# Apply CRLF to CSS files
+*.css text eol=crlf

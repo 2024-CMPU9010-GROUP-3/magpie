@@ -1,10 +1,8 @@
-name: PROJECT
-
-version: "1.0"
+version: '3.8'
 
 services:
   private-service:
-    image: ghcr.io/2024-cmpu9010-group-3/backend-private:0.1.0
+    image: ghcr.io/2024-cmpu9010-group-3/backend-private:0.5.0
     container_name: private-service
     ports:
       - "8081:8080"
@@ -12,7 +10,7 @@ services:
       - app-network
 
   public-service:
-    image: ghcr.io/2024-cmpu9010-group-3/backend-public:0.1.0
+    image: ghcr.io/2024-cmpu9010-group-3/backend-public:0.5.0
     container_name: public-service
     ports:
       - "8082:8080"

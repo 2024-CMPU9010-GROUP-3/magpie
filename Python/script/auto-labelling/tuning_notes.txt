@@ -1,0 +1,111 @@
+laundry list + notes
+30/09
+- research more on creating your own image dataset
+- brush up on transfer Learning
+- in-depth research of other models we are going to use
+
+02/10
+- find residential areas and run the script (install pandas & pillow in venv)
+
+08/10
+- find way to automatically label using label studio
+you did it pookie :) on 09/10 but you did it :) proud of you
+
+10/10
+- get the PR approved
+- try to further tune the model
+- label the rest of the pictures
+
+14/10
+- it5 of the model uses hyp.yaml, accuracy went from 0.79 to 0.81
+- it6 i will reduce the Learning rate from 0.01 to 0.001 and use it5 weights = acc went frm 0.81 to 0.82
+- it7 will put 20 epochs + use weights from it6 = acc went from 0.82 to 0.84
+- it8 will keep 20 epochs and changing iou threshold from 0.2 to 0.4 + use weights from it7 = acc went from 0.84 to 0.86
+- it9 will keep 20 epochs, changing warm up epochs to 5 instead of 4 + use weights from it8 = same results as it8
+- it10 i will reduce epochs back to 10, warmup to 2, add 5.0 degrees img rotation and use it8 weights = same results as it9
+- it11 i will keep epochs at 10, increase degrees to 7.0, decrease scale to 0.3 (parameters focused on image augmentation) & cls to 1.5 = same but p curve worse than previous iteration. img augmentation did Nothing.
+- it12 i will keep 10 epochs, put the img aug param back, keep cls at 1.5 and increase box loss from 0.05 to 0.1; will use it8 weights = acc decreased to 0.85, p curve as bad as it11, i think its because of the class loss
+- it13 i will put cls back to 1.0, but box loss back to 0.05 and reduce mosaic augmentation from 1.0 to 0.5 = same results, trying now with mosaic 0 and i will overwrite it13 = acc same but pr mAP shows slight decrease, no overwrite
+
+wtf do i do
+
+15/10
+- i think i will try to use the yolov8 labels again because the first iteration yielded very good acc (0.86) in the first run without hyp +
+- moved to using the yolov8 model, wrote the script and ran the model for 20 epochs-16 batch on the "n" model = acc at 0.59
+- switch to the "s" model = acc at 0.61, will use this moving forward
+
+16/10
+- keeping "s" model, adding evolve=True and switching to batch=8 for 10 epochs (also realized i was using an empty model for the previous ones, i'm using pre-trained now) = 0.71 acc
+- using .tune with 10 iterations-20 epochs-adamw optimizer-batch 16 and no plotting or validation until last it for faster tuning = the fitness/tuning plot showed no improvement overtime, so Saul is running overnight for 100 itérations + val=True for hopefully better results.
+
+17/10
+- looking at the fitness plot, the tuning did help find an ideal set of parameters, waiting for saul to run a new training now with these weights
+- training with the new weights, 30 epochs-patience 10-seed 1-batch 16-cache "disk" = 0.88 acc which is promising
+- training with same weights for 50 epochs-patience 20 etc... = 0.86 acc, which decreased. tbh before i hadnt put seed param so reproducibility was not there, now it is. i'm not sure what to change this time around to finally cross into 0.90 territory
+- switched to the m model with the fine tuned weights from s model, no improvement, therefore Saul with run tuning again tonight on the m model and we'll retrain tomorrow with hopefully more appropriate weights
+- decided to do one last training of the m model with val=true and optimizer=adamw to see if anything improves = 0.83, yeah we will go with fine-tuning.
+- in the first fine-tune, i think i set way too many itérations relative to the size of my dataset and batch size (data_size / batch size = n itérations) so i'm reducing it accordingly and hopefully we get better results tonight.
+
+18/10
+- saul ran the tuning model for 15 epochs-20 itérations and a warning came up, the model was not tuning at all. I'm not sure why that is.
+- yesterday evening we had a meeting with Damian about the Survey, we told him our progress with the model accuracy and he said "ML model with 90%+ acc is suspicious" so i'm wondering what do to, should we just settle?
+
+21/10
+- realized that the images were labelled kinda poorly, so i went and relabelled them all. I'm now gonna run the n model first again, on 20 epochs, patience 10, seed 1, imgsz 400, batch 16, cache disk, val True and optimizer adamw = 0.89 fuck yesssssssssss
+- let me train again same settings + pre-trained weights on the prev model (train7) = 0.90 WE MADE IT!! The graphs seem promising, I will train tomorrow for more epochs to see where this goes, and maybe try SGD optimizer as well
+
+22/10:
+- sending it over to saul to train the model on 50 epochs - patience 15, pre-trained weights of the 0.89 model(train7), optimizer adamw, val true, seed 1, img size 400, batch 16, cache disk = 0.93 (train_saul1)
+precision: 1.00 (conf 0.879)
+recall: 0.97 (conf 0.000)
+f1:0.83
+conf threshold: 0.558
+mAP@50:0.841
+
+- trying again same settings for 35 epochs instead = 0.93 (train_saul2)
+precision:
+recall:
+f1:
+conf threshold:
+mAP@50:
+
+- same settings but changing optimizer to SGD = 0.89 --discard
+
+- same settings back with adamw 35 epochs 15 patience but on the s model with no pre-trained weights = 0.91, very nice (train_saul3)
+precision: 1.00 (conf 0.826)
+recall: 0.98 (conf 0.000)
+f1: 0.84
+conf threshold: 0.379
+mAP@50: 0.853
+
+- still using s model, using pre-trained weights of 0.91, epochs 20 patience 10 = 0.92 interesting, need to look more into the results but i think i can call the training done. (train_saul4)
+precision: 1.00 (conf 0.751)
+recall: 0.98 (conf 0.000)
+f1: 0.84
+conf threshold: 0.358
+mAP@50: 0.856
+
+# NOTES FOR FURTHER TUNING
+- the S model seems very promising, achieving high score with no custom pre-trained weights. For now, I think we can settle for these results but for the future, it could be interesting to use the .tune method and use those hyp for further training
+- or manually play around with lr and image size (i lowered it from previous trainings)
+
+#random notes
+- F1 vs confidence threshold : highest point in the f1 curve represents optimal confidence threshold where the model achieves the best balance between precision and recall
+- high confidence threshold (close to 1) means the model is very conservative and only makes prédictions when it's very sure, resulting in fewer prédictions, fewer FPs (high precision, low recall)
+- low confidence threshold (close to 0) is the opposite, model is less strict resulting in more prédictions but also more FPs (higher recall, lower precision)
+
+# notes on yolo v8 model
+"n" - nano, smallest & lightest model out there optimized for speed and lower resources
+"s" - small, larger than n, slightly less accurate than bigger models
+"m" - medium, increased resource usage compared to s and n
+"l" - large, designed for higher accuracy an more resource usage
+"x" - extra large, more powerful, best for projects requiring high accuracy but very resource-intensive
+
+YOLOv8 Model Variants and Specifications:
+Model	Parameters	Layers	Size (Memory)	GFLOPs	Speed (ms)	Usage Recommendation
+YOLOv8n (Nano)	~3.2M	128	~7 MB	~8.7	Fastest	Best for mobile/edge devices where speed is critical but accuracy can be sacrificed.
+YOLOv8s (Small)	~11.2M	192	~20 MB	~26.2	Fast	Good for general applications, a balance of speed and accuracy. Suitable for real-time applications.
+YOLOv8m (Medium)	~25.9M	256	~60 MB	~78.9	Medium	Suitable for higher accuracy tasks, without needing extreme resource efficiency.
+YOLOv8l (Large)	~43.7M	320	~99 MB	~155.6	Slower	Best for tasks where higher accuracy is required and more computational power is available.
+YOLOv8x (Extra Large)	~68.2M	384	~168 MB	~257.8	Slowest	Highest accuracy model, typically used for server-side applications or research.
+

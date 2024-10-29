@@ -1,10 +1,16 @@
 # Public Routes
 
+### Route Categories (Authentication)
+There are currently three different route access levels for public routes in the backend.
+- `public` all clients are permitted to send requests to these routes
+- `authenticated` only clients with a valid JWT in the corresponding cookie are allowed
+- `restricted` requests are only permitted if the pertaining resource is owned by the same user that makes the request
+
 ## Auth
 
 ### `GET` `/v1/public/auth/User/{id}`
 
-- **Access:** public
+- **Access:** `restricted`
 - **Path Parameters:** UserId
 - **Query Parameters:** None
 - **Accepts:** None
@@ -13,7 +19,7 @@
 
 ### `POST` `/v1/public/auth/User/`
 
-- **Access:** public
+- **Access:** `public`
 - **Path Parameters:** None
 - **Query Parameters:** None
 - **Accepts:** User details
@@ -22,7 +28,7 @@
 
 ### `DELETE` `/v1/public/auth/User/{id}`
 
-- **Access:** public
+- **Access:** `restricted`
 - **Path Parameters:** UserId
 - **Query Parameters:** None
 - **Accepts:** None
@@ -31,7 +37,7 @@
 
 ### `PUT` `/v1/public/auth/User/{id}`
 
-- **Access:** public
+- **Access:** `restricted`
 - **Path Parameters:** UserId
 - **Query Parameters:** None
 - **Accepts:** JSON (User details)
@@ -40,27 +46,27 @@
 
 ### `POST` `/v1/public/auth/User/login`
 
-- **Access:** public
+- **Access:** `public`
 - **Path Parameters:** None
 - **Query Parameters:** None
 - **Accepts:** JSON (User login)
-- **Response:** JSON (Bearer Token)
+- **Response:** JSON (Bearer token, also sets `http-only` cookie)
 - **Description:** This route allows a user to login with a username and password. If authentication succeeds, returns a bearer token for authentication.
 
 ## Points
 
-### `GET` `/v1/public/points/byRadius?long={}&lat={}&radius={}`
+### `GET` `/v1/public/points/inRadius?long={}&lat={}&radius={}`
 
-- **Access:** public
+- **Access:** `authenticated`
 - **Path Parameters:** None
 - **Query Parameters:** Longitude, Latitude, Radius
 - **Accepts:** None
 - **Response:** JSON (List of points)
-- **Description:** This route returns all points in a square with a given radius around the given latitude and longitude
+- **Description:** This route returns all points in a circle with a given radius around the given latitude and longitude
 
 ### `GET` `/v1/public/points/{id}`
 
-- **Access:** public
+- **Access:** `authenticated`
 - **Path Parameters:** PointId
 - **Query Parameters:** None
 - **Accepts:** None

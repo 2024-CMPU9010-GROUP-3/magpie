@@ -1,0 +1,30 @@
+# hyperparameter tuning
+# hyperparameter tuning
+lr0: 0.01  # initial learning rate
+lrf: 0.2  # final OneCycleLR learning rate (lr0 * lrf)
+momentum: 0.937  # SGD momentum/Adam beta1
+weight_decay: 0.0005  # optimizer weight decay
+anchor_t: 4.0  # anchor-matching threshold
+box: 0.05  # box loss gain
+cls: 0.5  # class loss gain
+obj: 1.0  # object loss gain
+warmup_epochs: 3.0  # number of warmup epochs
+warmup_momentum: 0.8  # warmup momentum
+warmup_bias_lr: 0.1  # warmup learning rate for biases
+cls_pw: 1.0  # class confidence gain
+obj_pw: 1.0  # object confidence gain
+iou_t: 0.2  # IoU threshold for object detection
+fl_gamma: 0.0  # Focal Loss gamma (use 0 for no Focal Loss)
+hsv_h: 0.015  # image HSV-Hue augmentation (fraction)
+hsv_s: 0.7    # image HSV-Saturation augmentation (fraction)
+hsv_v: 0.4    # image HSV-Value augmentation (fraction)
+degrees: 0.0  # image rotation degrees
+translate: 0.1  # image translation (fraction)
+scale: 0.5  # image scale (fraction)
+shear: 0.0  # image shear degrees
+mosaic: 1.0  # mosaic augmentation probability (0.0 - 1.0)
+mixup: 0.0  # mixup augmentation probability (0.0 - 1.0)
+copy_paste: 0.0  # copy-paste augmentation probability
+perspective: 0.0  # perspective augmentation probability (0.0 - 1.0)
+fliplr: 0.5  # left-right flip augmentation probability (0.0 - 1.0)
+flipud: 0.0  # vertical flip augmentation probability (0.0 - 1.0)

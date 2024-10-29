@@ -1,0 +1,58 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-backend-deployment
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: public-backend
+  template:
+    metadata:
+      labels:
+        app: public-backend
+    spec:
+      containers:
+        - name: public-backend
+          image: ghcr.io/2024-cmpu9010-group-3/backend-public:0.5.0@sha256:e42fcd2f4c773b67cf6ac2d544a067f639e554d5835dbccdca539b4e7fff08ff
+          resources: {}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: LOGIN
+              valueFrom:
+                secretKeyRef:
+                  name: secret-magpie-db-user
+                  key: LOGIN
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-magpie-db-user
+                  key: PASSWORD
+            - name: HOST
+              valueFrom:
+                secretKeyRef:
+                  name: secret-magpie-db-user
+                  key: HOST
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: secret-magpie-db-user
+                  key: DATABASE_NAME
+
+            - name: MAGPIE_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secret-magpie-db-user
+                  key: MAGPIE_JWT_SECRET
+                  
+            - name: MAGPIE_CORS_ALLOWED_ORIGINS
+              value: "http://frontend-service.magpie.svc.cluster.local https://magpie.solonsstuff.com"
+            - name: MAGPIE_CORS_ALLOWED_METHODS
+              value: "GET, POST, PUT, DELETE, OPTIONS"

@@ -18,11 +18,14 @@
                 "eamodio.gitlens",
                 // Other helpers
                 "shardulm94.trailing-spaces",
+                "streetsidesoftware.code-spell-checker", // spell checker
                 "stkb.rewrap", // rewrap comments after n characters on one line
                 // Other
                 "vscode-icons-team.vscode-icons"
             ],
             "settings": {
+                // Spellcheck settings
+                "cSpell.language": "en-GB",
                 // General settings
                 "files.eol": "\n",
                 // Latex settings

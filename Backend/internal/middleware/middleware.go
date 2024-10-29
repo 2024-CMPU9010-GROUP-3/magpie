@@ -16,3 +16,13 @@ func CreateMiddlewareStack(middlewares ...Middleware) Middleware {
 		return next
 	}
 }
+
+var Access = struct {
+	Public        Middleware
+	Authenticated Middleware
+	Protected     Middleware
+}{
+	Public:        CreateMiddlewareStack(accessPublic),
+	Authenticated: CreateMiddlewareStack(accessAuthenticated),
+	Protected:     CreateMiddlewareStack(accessAuthenticated, accessOwnerOnly),
+}

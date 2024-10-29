@@ -1,10 +1,10 @@
-FROM golang:1.23.1-bookworm AS build-stage
+FROM golang:1.23.2-bookworm AS build-stage
 
 WORKDIR /app
 
 COPY go.mod ./
 
-RUN go mod download
+RUN  go mod download
 
 COPY . .
 

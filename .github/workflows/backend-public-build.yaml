@@ -37,7 +37,7 @@ jobs:
       - name: Extract package version
         id: get_version
         run: |
-          VERSION=$(cat Backend/.version)
+          VERSION=$(cat Backend/.version | tr -d '\n' | tr -d '\r')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Push Docker image to GitHub Container Registry

@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: private-backend-deployment
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: private-backend
+  template:
+    metadata:
+      labels:
+        app: private-backend
+    spec:
+      containers:
+        - name: private-backend
+          image: ghcr.io/2024-cmpu9010-group-3/backend-private:0.5.0@sha256:a7c31350c83adc9dbb52938ad9783ab44a349317412cc516f06294f8c9e09e72
+          resources: {}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: LOGIN
+              valueFrom:
+                secretKeyRef:
+                  name: secret-magpie-db-user
+                  key: LOGIN
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-magpie-db-user
+                  key: PASSWORD
+            - name: HOST
+              valueFrom:
+                secretKeyRef:
+                  name: secret-magpie-db-user
+                  key: HOST
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: secret-magpie-db-user
+                  key: DATABASE_NAME

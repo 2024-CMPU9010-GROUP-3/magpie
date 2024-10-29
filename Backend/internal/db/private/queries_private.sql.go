@@ -10,7 +10,7 @@ package db
 import (
 	"context"
 
-	geos "github.com/twpayne/go-geos"
+	go_geom "github.com/twpayne/go-geom"
 )
 
 const createPoint = `-- name: CreatePoint :one
@@ -22,9 +22,9 @@ INSERT INTO points (
 `
 
 type CreatePointParams struct {
-	Longlat *geos.Geom `json:"longlat"`
-	Type    PointType  `json:"type"`
-	Details []byte     `json:"details"`
+	Longlat *go_geom.Point `json:"longlat"`
+	Type    PointType      `json:"type"`
+	Details []byte         `json:"details"`
 }
 
 func (q *Queries) CreatePoint(ctx context.Context, arg CreatePointParams) (int64, error) {
@@ -53,10 +53,10 @@ WHERE Id = $1
 `
 
 type UpdatePointParams struct {
-	ID      int64      `json:"id"`
-	Longlat *geos.Geom `json:"longlat"`
-	Type    PointType  `json:"type"`
-	Details []byte     `json:"details"`
+	ID      int64          `json:"id"`
+	Longlat *go_geom.Point `json:"longlat"`
+	Type    PointType      `json:"type"`
+	Details []byte         `json:"details"`
 }
 
 func (q *Queries) UpdatePoint(ctx context.Context, arg UpdatePointParams) error {
