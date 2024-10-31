@@ -7,6 +7,7 @@ const HomePage = () => {
   return (
       <ProtectedRoute>
         <LocationAggregatorMap />
+        <CookieBanner />
       </ProtectedRoute>
   );
 };
