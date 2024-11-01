@@ -4,46 +4,54 @@ import sys
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-def send_parking_spot(session, url, row):
+# Define a generic send function
+def send_point(session, url, point_type, coordinates, details):
     point_data = {
         "longlat": {
             "type": "Point",
-            "coordinates": [row['longitude'], row['latitude']]
+            "coordinates": coordinates
         },
-        "type": "parking",
-        "details": {}
+        "type": point_type,
+        "details": details
     }
     try:
         response = session.post(url, json=point_data)
-        if response.status_code in (200, 201):
-            return True
-        else:
-            print(f"Failed to add point: {response.status_code}, {response.text}")
-            return False
-    except Exception as e:
-        print(f"Error sending data to API: {e}")
+        return response.status_code in (200, 201)
+    except:
         return False
 
-def send_parking_spots_to_api(data):
-    """
-    Function to send the data as POST requests to the backend using multithreading.
-    """
-    url = "http://localhost:8080/v1/private/points/" # This is intentionally hardcoded, this will never change in prod
-    successful_posts = 0
+# Dictionary of types with field mappings
+MAPPING = {
+    "parking": {"point_type": "parking", "coordinates": ["longitude", "latitude"], "details": {}},
+    "coach_parking": {"point_type": "coach_parking", "coordinates": ["Longitude", "Latitude"], "details": {"number_spaces_available": "Spaces available"}},
+    "bike_sharing_station": {"point_type": "bike_sharing_station", "coordinates": ["Longitude", "Latitude"], "details": {"number_bikes_available": "Number"}},
+    # Add other mappings as needed...
+}
+
+# Function to process points from DataFrame rows
+def process_point(row, session, url, point_config):
+    coords = [row[point_config["coordinates"][0]], row[point_config["coordinates"][1]]]
+    details = {k: row[v] for k, v in point_config["details"].items()}
+    return send_point(session, url, point_config["point_type"], coords, details)
+
+# Send points with threading
+def send_points_to_api(data, point_type):
+    url = "http://localhost:8080/v1/private/points/"
     total = len(data)
+    successful_posts = 0
 
-    # Create a shared session
+    point_config = MAPPING.get(point_type)
+    if not point_config:
+        print(f"Point type '{point_type}' not found in configuration.")
+        return
+
     session = requests.Session()
-
     with ThreadPoolExecutor() as executor:
-        futures = []
-        for index, row in data.iterrows():
-            futures.append(executor.submit(send_parking_spot, session, url, row))
+        futures = [executor.submit(process_point, row, session, url, point_config) for _, row in data.iterrows()]
 
-        with tqdm(total=total, desc="Uploading parking spots", unit="spot") as pbar:
+        with tqdm(total=total, desc=f"Uploading {point_type}", unit="spot") as pbar:
             for future in as_completed(futures):
-                result = future.result()
-                if result:
+                if future.result():
                     successful_posts += 1
                 pbar.update(1)
                 pbar.set_postfix(successful=successful_posts, failed=(pbar.n - successful_posts))
@@ -51,23 +59,18 @@ def send_parking_spots_to_api(data):
     session.close()
 
 def read_csv_file(csv_file_path):
-    """
-    Function to read the CSV file into a pandas DataFrame.
-    """
     try:
-        data = pd.read_csv(csv_file_path)
-        return data
-    except Exception as e:
-        print(f"Error reading CSV file: {e}")
+        return pd.read_csv(csv_file_path)
+    except:
+        print("Error reading CSV file.")
         return None
 
-def main(csv_file_path):
-    """
-    Main function to send all the coordinates in a CSV file to the backend.
-    """
+def main(csv_file_path, point_type):
     data = read_csv_file(csv_file_path)
-    if data is not None:
-        send_parking_spots_to_api(data)
+    if data is None:
+        return
+
+    send_points_to_api(data, point_type)
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])
