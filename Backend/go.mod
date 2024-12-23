@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang-migrate/migrate/v4 v4.18.1
-	github.com/jackc/pgx/v5 v5.7.1
+	github.com/jackc/pgx/v5 v5.7.2
 	github.com/joho/godotenv v1.5.1
 	github.com/pashagolub/pgxmock/v4 v4.3.0
 	github.com/rs/cors v1.11.1
