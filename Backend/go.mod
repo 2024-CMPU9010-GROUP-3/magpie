@@ -7,7 +7,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/joho/godotenv v1.5.1
-	github.com/pashagolub/pgxmock/v4 v4.3.0
+	github.com/pashagolub/pgxmock/v4 v4.4.0
 	github.com/rs/cors v1.11.1
 	github.com/twpayne/go-geom v1.5.7
 	github.com/twpayne/pgx-geom v0.0.2
