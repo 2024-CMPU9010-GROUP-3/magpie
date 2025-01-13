@@ -2,7 +2,7 @@ name: magpie
 
 services:
   postgis-service:
-    image: postgis/postgis:17-3.5-alpine@sha256:96b047542c1d5903ead2ba04fb6098b68a0c9581ebdb2a7b3ef21c10bb3ac5d3
+    image: postgis/postgis:17-3.5-alpine@sha256:f8041ef47c11bdee91f41a66fc3e9996b9f77425aa7a1a01785fca07d1fa5e3e
     container_name: postgis
     environment:
       - POSTGRES_USER=postgres
